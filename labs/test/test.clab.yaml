@@ -7,16 +7,32 @@ mgmt:
 
 topology:
   kinds:
-    srl:
-      image: ghcr.io/nokia/srlinux
+    cvx:
+      image: networkop/cx:4.3.0
   nodes:
     R1:
-      kind: srl
+      kind: cvx
       mgmt_ipv4: 172.100.100.11
-      startup-config: configs/R1.json
     R2:
-      kind: srl
+      kind: cvx
       mgmt_ipv4: 172.100.100.12
-      startup-config: configs/R2.json
+    R3:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.13
+    R4:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.14
+    R5:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.15
+    R6:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.16
+    R7:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.17
+    R8:
+      kind: cvx
+      mgmt_ipv4: 172.100.100.18
   links:
-    - endpoints: ["R1:e1-1", "R2:e1-1"]
+    - endpoints: ["R1:swp1", "R2:swp1"]

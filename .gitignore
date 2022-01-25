@@ -1,6 +1,7 @@
 #Containerlab Files
-.mredis.clab.yaml
 clab-mpointredis
+clab-test
+.*.clab.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
