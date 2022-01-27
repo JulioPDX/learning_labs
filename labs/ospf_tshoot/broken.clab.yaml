@@ -1,5 +1,7 @@
-name: mpointredis
+name: ospf
 prefix: ""
+
+# docker exec -it <node> Cli
 
 mgmt:
   network: statics
@@ -13,42 +15,81 @@ topology:
     R1:
       kind: ceos
       mgmt_ipv4: 172.100.100.11
-      # startup-config: configs/R1.json
     R2:
       kind: ceos
       mgmt_ipv4: 172.100.100.12
-      # startup-config: configs/R2.json
     R3:
       kind: ceos
       mgmt_ipv4: 172.100.100.13
-      # startup-config: configs/R3.json
     R4:
       kind: ceos
       mgmt_ipv4: 172.100.100.14
-      # startup-config: configs/R4.json
-    # R5:
-    #   kind: ceos
-    #   mgmt_ipv4: 172.100.100.15
-    #   startup-config: configs/R5.json
-    # R6:
-    #   kind: ceos
-    #   mgmt_ipv4: 172.100.100.16
-    #   startup-config: configs/R6.json
-    # R7:
-    #   kind: ceos
-    #   mgmt_ipv4: 172.100.100.17
-    #   startup-config: configs/R7.json
-    # R8:
-    #   kind: ceos
-    #   mgmt_ipv4: 172.100.100.18
-    #   startup-config: configs/R8.json
+    R5:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.15
+    R6:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.16
+    R7:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.17
+    R8:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.18
+    R9:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.19
+    R10:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.20
+    R11:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.21
+    R12:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.22
+    R13:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.23
+    R14:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.24
+    # auto:
+    #   kind: linux
+    #   image: juliopdx/netauto
+    #   mgmt_ipv4: 172.100.100.100
+    #   binds:
+    #     - checks/:/etc/tmp
   links:
-    # - endpoints: ["R1:e1-1", "R2:e1-1"]
-    # - endpoints: ["R2:e1-2", "R3:e1-1"]
-    # - endpoints: ["R2:e1-3", "R4:e1-1"]
-    # - endpoints: ["R3:e1-2", "R5:e1-1"]
-    # - endpoints: ["R4:e1-2", "R5:e1-2"]
-    # - endpoints: ["R5:e1-3", "R6:e1-1"]
-    # - endpoints: ["R5:e1-4", "R7:e1-1"]
-    # - endpoints: ["R6:e1-2", "R8:e1-1"]
-    # - endpoints: ["R7:e1-2", "R8:e1-2"]
+    # R1
+    - endpoints: ["R1:eth1", "R2:eth1"]
+    - endpoints: ["R1:eth2", "R5:eth1"]
+    - endpoints: ["R1:eth3", "R8:eth1"]
+    - endpoints: ["R1:eth4", "R9:eth1"]
+    # R2
+    - endpoints: ["R2:eth2", "R3:eth1"]
+    - endpoints: ["R2:eth3", "R8:eth2"]
+    - endpoints: ["R2:eth4", "R9:eth2"]
+    # R3
+    - endpoints: ["R3:eth2", "R4:eth1"]
+    - endpoints: ["R3:eth3", "R12:eth1"]
+    # R4
+    - endpoints: ["R4:eth2", "R5:eth2"]
+    - endpoints: ["R4:eth3", "R12:eth2"]
+    - endpoints: ["R4:eth4", "R7:eth1"]
+    # R5
+    - endpoints: ["R5:eth3", "R6:eth1"]
+    - endpoints: ["R5:eth4", "R7:eth2"]
+    # R6
+    - endpoints: ["R6:eth2", "R7:eth3"]
+    - endpoints: ["R6:eth3", "R11:eth2"]
+    # R7
+    - endpoints: ["R7:eth4", "R11:eth1"]
+    # R8
+    - endpoints: ["R8:eth3", "R9:eth3"]
+    # R10
+    - endpoints: ["R10:eth2", "R14:eth1"]
+    # R11
+    - endpoints: ["R11:eth3", "R10:eth1"]
+    # R12
+    - endpoints: ["R12:eth3", "R13:eth1"]

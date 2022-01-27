@@ -1,6 +1,7 @@
 #Containerlab Files
 clab-mpointredis
 clab-test
+clab-ospf
 .*.clab.yaml
 
 # Byte-compiled / optimized / DLL files

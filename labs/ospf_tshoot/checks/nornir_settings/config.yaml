@@ -1,0 +1,10 @@
+---
+inventory:
+  plugin: AnsibleInventory
+  options:
+    hostsfile: "inventory.yaml"
+
+runner:
+  plugin: threaded
+  options:
+    num_workers: 10
