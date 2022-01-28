@@ -1,0 +1,10 @@
+---
+eos:
+  platform: eos
+  username: admin
+  password: admin
+  connection_options:
+    scrapli:
+      extras:
+        auth_strict_key: False
+        auth_secondary: admin

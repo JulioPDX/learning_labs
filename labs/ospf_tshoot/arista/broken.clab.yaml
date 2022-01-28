@@ -54,12 +54,12 @@ topology:
     R14:
       kind: ceos
       mgmt_ipv4: 172.100.100.24
-    # auto:
-    #   kind: linux
-    #   image: juliopdx/netauto
-    #   mgmt_ipv4: 172.100.100.100
-    #   binds:
-    #     - checks/:/etc/tmp
+    auto:
+      kind: linux
+      image: juliopdx/netauto
+      mgmt_ipv4: 172.100.100.100
+      binds:
+        - checks/:/etc/tmp
   links:
     # R1
     - endpoints: ["R1:eth1", "R2:eth1"]

@@ -1,0 +1,57 @@
+---
+R1:
+  hostname: 172.100.100.11
+  groups:
+    - eos
+R2:
+  hostname: 172.100.100.12
+  groups:
+    - eos
+R3:
+  hostname: 172.100.100.13
+  groups:
+    - eos
+R4:
+  hostname: 172.100.100.14
+  groups:
+    - eos
+R5:
+  hostname: 172.100.100.15
+  groups:
+    - eos
+R6:
+  hostname: 172.100.100.16
+  groups:
+    - eos
+R7:
+  hostname: 172.100.100.17
+  groups:
+    - eos
+R8:
+  hostname: 172.100.100.18
+  groups:
+    - eos
+R9:
+  hostname: 172.100.100.19
+  groups:
+    - eos
+R10:
+  hostname: 172.100.100.20
+  groups:
+    - eos
+R11:
+  hostname: 172.100.100.21
+  groups:
+    - eos
+R12:
+  hostname: 172.100.100.22
+  groups:
+    - eos
+R13:
+  hostname: 172.100.100.23
+  groups:
+    - eos
+R14:
+  hostname: 172.100.100.24
+  groups:
+    - eos
