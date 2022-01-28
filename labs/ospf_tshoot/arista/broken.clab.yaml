@@ -1,7 +1,9 @@
 name: ospf
 prefix: ""
 
+# Options to connect to nodes
 # docker exec -it <node> Cli
+# ssh admin@<container name>
 
 mgmt:
   network: statics
@@ -15,45 +17,59 @@ topology:
     R1:
       kind: ceos
       mgmt_ipv4: 172.100.100.11
+      startup-config: configs/R1.conf
     R2:
       kind: ceos
       mgmt_ipv4: 172.100.100.12
+      startup-config: configs/R2.conf
     R3:
       kind: ceos
       mgmt_ipv4: 172.100.100.13
+      startup-config: configs/R3.conf
     R4:
       kind: ceos
       mgmt_ipv4: 172.100.100.14
+      startup-config: configs/R4.conf
     R5:
       kind: ceos
       mgmt_ipv4: 172.100.100.15
+      startup-config: configs/R5.conf
     R6:
       kind: ceos
       mgmt_ipv4: 172.100.100.16
+      startup-config: configs/R6.conf
     R7:
       kind: ceos
       mgmt_ipv4: 172.100.100.17
+      startup-config: configs/R7.conf
     R8:
       kind: ceos
       mgmt_ipv4: 172.100.100.18
+      startup-config: configs/R8.conf
     R9:
       kind: ceos
       mgmt_ipv4: 172.100.100.19
+      startup-config: configs/R9.conf
     R10:
       kind: ceos
       mgmt_ipv4: 172.100.100.20
+      startup-config: configs/R10.conf
     R11:
       kind: ceos
       mgmt_ipv4: 172.100.100.21
+      startup-config: configs/R11.conf
     R12:
       kind: ceos
       mgmt_ipv4: 172.100.100.22
+      startup-config: configs/R12.conf
     R13:
       kind: ceos
       mgmt_ipv4: 172.100.100.23
+      startup-config: configs/R13.conf
     R14:
       kind: ceos
       mgmt_ipv4: 172.100.100.24
+      startup-config: configs/R14.conf
     auto:
       kind: linux
       image: juliopdx/netauto

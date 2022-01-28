@@ -2,12 +2,14 @@
 
 Hello and thank you for giving this lab a go.
 
+![](images/topo.png)
+
 ## Requirements
 
 - [Docker](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04)
 - [Containerlab](https://containerlab.srlinux.dev/install/)
 - Server or machine with a decent amount of ram and CPU. In my lab I stood up a server with 8vcpu (limit on free ESXi) and 32G of ram. Although, 16 should work just fine.
-- Arista cEOS image. I am using 4.27.0F, but any other image should work. I'll exmplain a small difference later on in the readme.
+- Arista cEOS image [(sign up required)](https://www.arista.com/en/login). I am using 4.27.0F, but any other image should work. I'll explain a small difference later on in the readme.
 
 ## Purpose
 
@@ -15,9 +17,9 @@ A while ago I mentioned that Containerlab would be an incerdible resource in an 
 
 ## The Lab
 
-This lab consists of 14 cEOS nodes running OSPFv2. Every link connecting the nodes is configured as a point to point (`/31`). The lab is complete when all problems are solved and the `13.13.13.0` network is present in the routing table(no statics) for the following nodes: R8/R9/R14
+This lab consists of 14 cEOS nodes running OSPFv2. Every link connecting the nodes is configured as a point to point (`/31`). The lab is complete when all problems are solved and the `13.13.13.0` network is present/reachable in the routing table(no statics) for the following nodes: R8/R9/R14
 
-Every router is configured with a router ID of `0.0.0.X`, where X is the router number. On each point to point link, the lower router receives the first IP address in the `/31` network. Every router is advertising a loopback interface of `X.X.X.X/24`, where X is the router number.
+Every router is configured with a router ID of `0.0.0.X`, where X is the router number. On each point to point link, the lower router receives the first IP address in the `/31` network. Every router is advertising a loopback interface of `X.X.X.X/24`, where X is the router number. There is an `interfaces.md` file in this directory, it will list all IP addresses and area assignments.
 
 ## Restrictions
 
@@ -37,11 +39,19 @@ cd learning_labs/labs/ospf_tshoot/arista
 sudo containerlab deploy -t broken.clab.yaml
 ```
 
+## Connecting to Nodes
+
+```bash
+# docker exec -it <node> Cli
+# ssh admin@<container name>
+```
+
+
 ## Problems
 
 ### Issue 1
 
-It seems that R1 and R2 are not establishing a neighbor relationship, see if you can find out whats going on?
+It seems that R1 and R2 are not establishing a neighbor relationship, see if you can find out what is going on?
 
 <details close>
 <summary>Solution</summary>
@@ -105,7 +115,7 @@ Neighbor ID     Instance VRF      Pri State                  Dead Time   Address
 
 ### Issue 2
 
-R4 should have two equal cost paths to networks `8.8.8.8` and `9.9.9.9`.
+R4 should have two equal cost paths to networks `8.8.8.0` and `9.9.9.0`.
 
 <details close>
 <summary>Solution</summary>
@@ -126,7 +136,7 @@ R4# show ip route ospf
  O        10.0.0.0/31 [110/30] via 10.0.0.6, Ethernet1
 ```
 
-It seems we have one path via `10.0.0.6`. We can check to make sure our neighbors are up. R4 should be neighbors with R3, R5, and R12.
+It seems we have one path via `10.0.0.6`. We can check to make sure our neighbors are up. R4 should be neighbors with R3, R5, R7, and R12.
 
 ```bash
 R4#  show ip ospf neighbor
@@ -158,7 +168,7 @@ R5#show ip ospf interface brief
 R5#
 ```
 
-Thats a bit odd, `Et2` has a DR on R4 but on R5 the state is `P2P`. One of the main causes of issues in OSPF is network typed mis-matches. In this case, even if a point to point network may come up as `FULL` with a broadcast network, they are not compatible. We can quickly change the interface on R4 to be a point to point.
+Thats a bit odd, `Et2` has a state of `DR` on R4 but on R5 the state is `P2P`. One of the main causes of issues in OSPF is network type mis-matches. In this case, even if a point to point network may come up as `FULL` with a broadcast network, they are not compatible. We can quickly change the interface on R4 to be a point to point.
 
 ```bash
 R4#show ip ospf interface ethernet 2
@@ -197,7 +207,7 @@ R4(config-if-Et2)#show ip route ospf
 
 ### Issue 3 Part I
 
-In similiar format to issue 2, R11 should also have two equal paths to the `8.8.8.8` and `9.9.9.9` networks.
+In similiar format to issue 2, R11 should also have two equal paths to the `8.8.8.0` and `9.9.9.0` networks.
 
 <details close>
 <summary>Solution</summary>
@@ -307,7 +317,7 @@ R7#show ip route 8.8.8.0
 R7#
 ```
 
-It looks like R7 has two equal paths towards R6 and R4. All things being equal, it should use the shorter path towards R5.Hmm, we can check the interface costs on R7.
+It looks like R7 has two equal paths towards R6 and R4. All things being equal, it should use the shorter path towards R5. Hmm, we can check the interface costs on R7.
 
 ```bash
 R7#show ip ospf interface brief
@@ -320,9 +330,12 @@ R7#show ip ospf interface brief
 R7#
 ```
 
-At this point it is safe to assume the interface cost was configured incorrectly. From R7 standpoint, it makes the route through R5 look terrible. We can adjust this quickly and then make sure R7 is taking the path towards R5 and R11 has two equal paths.
+At this point it is safe to assume the interface cost was configured incorrectly. From R7 standpoint, it makes the route through R5 look terrible. We can adjust this quickly and then make sure R7 is taking the path towards R5. We can finally close this one out by validating that R11 has two equal paths.
 
 ```bash
+R7#configure 
+R7(config)#interface ethernet 2
+R7(config-if-Et2)#ip ospf cost 10
 R7(config-if-Et2)#show ip route ospf
 
  O        1.1.1.0/24 [110/30] via 10.0.0.12, Ethernet2
@@ -352,7 +365,7 @@ R11#
 
 ### Issue 4
 
-R13 is redistributing its lookback0 interface into area 123. The routers in the core(area 0) of the network cannot see the `13.13.13.0` network. R13 is also not recieving any routes. See if you can find a solution.
+R13 is redistributing its lookback 0 interface into area 123. The routers in the core (area 0) of the network cannot see the `13.13.13.0` network. R13 is also not receiving any routes and should have full reachability. See if you can find a solution.
 
 <details close>
 <summary>Solution</summary>
@@ -368,7 +381,7 @@ R13#show ip ospf interface brief
    Interface          Instance VRF        Area            IP Address         Cost  State      Nbrs
    Et1                1        default    0.0.0.123       10.0.0.33/31       10    P2P        0
 R13#
-# On R12
+##################################################################################################
 R12#show ip ospf interface brief
    Interface          Instance VRF        Area            IP Address         Cost  State      Nbrs
    Et2                1        default    0.0.0.0         10.0.0.31/31       10    P2P        1
@@ -394,6 +407,7 @@ R12#show ip ospf 1 | include Area|area
    It is a NSSA area
    Area has None authentication
    Number of opaque area LSA 0. Checksum Sum 0
+############################################################################
 R13#show ip ospf 1 | include Area|area
  It is an autonomous system boundary router and is not an area border router
  Number of areas in this router is 1. 0 normal, 1 stub, 0 nssa
@@ -405,7 +419,7 @@ R13#show ip ospf 1 | include Area|area
 R13#
 ```
 
-It looks like area 123 is configured as a stub. Remember, to redistribute routes from a stub area, it must be an NSSA area. We can correct this then check if R13 has network reachability.
+It looks like area 123 is configured as a stub on R13. Remember, to redistribute routes from a stub area, it must be an NSSA area. We can correct this then check if R13 has network reachability.
 
 ```bash
 R13#configure
@@ -442,7 +456,7 @@ R12#show ip route ospf | inc 13.13.13.0
 R12#
 ```
 
-We can check if R12 is filtering.
+We can check if R12 is filtering any routes.
 
 ```bash
 R12(config-router-ospf)# show ip ospf | inc filter
@@ -494,8 +508,8 @@ R13(config-route-map-CONN)#exit
 R12#show ip route ospf | include 13.13.13.0
  O N2     13.13.13.0/24 [110/1] via 10.0.0.33, Ethernet3
 R12#
-# R12 will convert this type 7 external route to a type 5 external before it reaches area 0
-###########################################################################################
+# R12 will convert this type 7 external route to a type 5 external into area 0
+##############################################################################
 # We can check one node in the core
 R3# show ip route | inc 13.13.13.0
  O E2     13.13.13.0/24 [110/1] via 10.0.0.29, Ethernet3
@@ -550,20 +564,20 @@ R14#show ip route ospf
  ...
 ```
 
-One of the main tasks was that this node has reachability to `13.13.13.0`. We can test this now!
+At this point R14 should have reachability to `13.13.13.0`. We can test this now!
 
 ```bash
-R14#  ping 13.13.13.13
+R14#ping 13.13.13.13
 PING 13.13.13.13 (13.13.13.13) 72(100) bytes of data.
-80 bytes from 13.13.13.13: icmp_seq=1 ttl=59 time=0.617 ms
-80 bytes from 13.13.13.13: icmp_seq=2 ttl=59 time=0.422 ms
-80 bytes from 13.13.13.13: icmp_seq=3 ttl=59 time=0.295 ms
-80 bytes from 13.13.13.13: icmp_seq=4 ttl=59 time=0.291 ms
-80 bytes from 13.13.13.13: icmp_seq=5 ttl=59 time=0.327 ms
+80 bytes from 13.13.13.13: icmp_seq=1 ttl=59 time=0.682 ms
+80 bytes from 13.13.13.13: icmp_seq=2 ttl=59 time=0.300 ms
+80 bytes from 13.13.13.13: icmp_seq=3 ttl=59 time=0.296 ms
+80 bytes from 13.13.13.13: icmp_seq=4 ttl=59 time=0.282 ms
+80 bytes from 13.13.13.13: icmp_seq=5 ttl=59 time=0.275 ms
 
 --- 13.13.13.13 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 4ms
-rtt min/avg/max/mdev = 0.291/0.390/0.617/0.124 ms, ipg/ewma 1.002/0.498 ms
+rtt min/avg/max/mdev = 0.275/0.367/0.682/0.157 ms, ipg/ewma 1.003/0.518 ms
 R14#
 ```
 
@@ -573,7 +587,7 @@ R14#
 
 ### Issue 6
 
-At this point R14 should have reachability to the `13.13.13.0` network. It looks like R8 and R9 cannot reach the `13.13.13.0` network. This one might be a tough one!
+It looks like R8 and R9 cannot reach the `13.13.13.0` network. This one might be a tough one!
 
 <details close>
 <summary>Solution</summary>
@@ -646,7 +660,7 @@ R1#  show ip route ospf
  O IA     14.14.14.0/24 [110/60] via 10.0.0.3, Ethernet2
 ```
 
-It looks like that route is in table for R1, you also might have noticed that R8 and R9 have a lot of missing `/31` routes. This could be filtering to hide some core information from area 89. For example, why advertise that information when they will use the ABR to reach those networks. That brings up a good point. The `13.13.13.0` network is an external network. Lets check that network in the link state database of R1.
+It looks like that route is in table for R1, you also might have noticed that R8 and R9 have a lot of missing `/31` routes. This could be filtering to hide some core information from area 89. For example, why advertise that information when they will use the ABR to reach other networks. That brings up a good point. The `13.13.13.0` network is an external network. Lets check that network in the link state database of R1.
 
 ```bash
 R1# show ip ospf database external 13.13.13.0
@@ -753,12 +767,14 @@ That is so pretty.
 
 ### Testing
 
+<details close>
+<summary>Example</summary>
+
 I am currently going through the intro to computer science course on CS50X, great course by the way. In that course, when you complete a project, there is automated testing that goes on to make sure the project meets the requirements. I also created something to mimick this. Imagine in a learning envirnoment, instructors or even students themselves could run tests to check their score or see what is missing. Please note, I created this as a concept and does not test everything in this network. If you would like to test yourself(not required), please follow the instructions below!
 
 ```bash
 docker exec -it auto /bin/bash
 cd /etc/tmp/
-cp arista_eos_show_ip_ospf_neighbor.textfsm /usr/local/lib/python3.9/site-packages/ntc_templates
 ```
 
 ```bash
@@ -768,3 +784,25 @@ rm /usr/local/lib/python3.9/site-packages/ntc_templates/templates/arista_eos_sho
 
 cp arista_eos_show_ip_ospf_neighbor.textfsm /usr/local/lib/python3.9/site-packages/ntc_templates/templates/
 ```
+
+```bash
+...snippet...
+python validate.py
+🥬 Interface checks passed for Ethernet1 on R1 🥬
+🥬 Interface checks passed for Ethernet2 on R1 🥬
+🥬 Interface checks passed for Ethernet3 on R1 🥬
+🥬 Interface checks passed for Ethernet4 on R1 🥬
+🥬 Interface checks passed for Loopback0 on R1 🥬
+🥬 Interface checks passed for Management0 on R1 🥬
+🥬 Neighbor checks passed for 0.0.0.5 on R1 🥬
+🥬 Neighbor checks passed for 0.0.0.2 on R1 🥬
+🥬 Neighbor checks passed for 0.0.0.8 on R1 🥬
+🥬 Route: 13.13.13.0 exists in routing table for R8 🥬
+🥬 Route: 13.13.13.0 exists in routing table for R9 🥬
+🥬 Interface checks passed for Ethernet1 on R10 🥬
+🥬 Interface checks passed for Ethernet2 on R10 🥬
+🔴 Route: 13.13.13.0 does not exists in routing table for R14 🔴
+root@auto:/etc/tmp# 
+```
+
+</details>

@@ -32,20 +32,24 @@ for host in norn.inventory.hosts.keys():
     int_result = interface_results[host][0]
     int_parsed = int_result.scrapli_response.textfsm_parse_output()
     for interface in int_parsed:
-        if interface["link_status"] != "up" or int(interface["mtu"]) < 1500:
-            print(
-                f":red_circle: Interface checks did not pass for {interface['interface']} on {host} :red_circle:"
-            )
+        # Skipping tunnel interface checks
+        if "Tunnel" in interface["interface"]:
+            pass
         else:
-            print(
-                f":leafy_green: Interface checks passed for {interface['interface']} on {host} :leafy_green:"
-            )
+            if interface["link_status"] != "up" or int(interface["mtu"]) < 1500:
+                print(
+                    f":red_circle: Interface checks did not pass for {interface['interface']} on {host} :red_circle:"
+                )
+            else:
+                print(
+                    f":leafy_green: Interface checks passed for {interface['interface']} on {host} :leafy_green:"
+                )
 
     # Simple neighbor check
     data = ospf_results[host]
     ospf_parsed = data.scrapli_response.textfsm_parse_output()
     for neigh in ospf_parsed:
-        if neigh["state"] != "FULL":
+        if "Full" in neigh["state"]:
             print(
                 f":red_circle: Neighbor checks did not pass for {neigh['neighbor_id']} on {host} :red_circle:"
             )
@@ -59,11 +63,12 @@ for host in norn.inventory.hosts.keys():
         route_result = route_results[host][0]
         route_parsed = route_result.scrapli_response.textfsm_parse_output()
         route = "13.13.13.0"
-        routes = [
-            value for elem in route_parsed for value in elem.values()]
+        routes = [value for elem in route_parsed for value in elem.values()]
         if route in routes:
             print(
-                f":leafy_green: Route: {route} exists in routing table for {host} :leafy_green:")
+                f":leafy_green: Route: {route} exists in routing table for {host} :leafy_green:"
+            )
         else:
             print(
-                f":red_circle: Route: {route} does not exists in routing table for {host} :red_circle:")
+                f":red_circle: Route: {route} does not exists in routing table for {host} :red_circle:"
+            )
