@@ -9,6 +9,8 @@ topology:
   kinds:
     srl:
       image: ghcr.io/nokia/srlinux
+    ceos:
+      image: ceos:4.27.0F
   nodes:
     R1:
       kind: srl
@@ -23,16 +25,8 @@ topology:
       mgmt_ipv4: 172.100.100.13
       # startup-config: configs/R3.json
     R4:
-      kind: srl
+      kind: ceos
       mgmt_ipv4: 172.100.100.14
-      # startup-config: configs/R4.json
-    R5:
-      kind: srl
-      mgmt_ipv4: 172.100.100.15
-      # startup-config: configs/R5.json
   links:
     - endpoints: ["R1:e1-1", "R2:e1-1"]
     - endpoints: ["R2:e1-2", "R3:e1-1"]
-    - endpoints: ["R2:e1-3", "R4:e1-1"]
-    - endpoints: ["R3:e1-2", "R5:e1-1"]
-    - endpoints: ["R4:e1-2", "R5:e1-2"]

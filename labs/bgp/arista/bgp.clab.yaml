@@ -1,0 +1,52 @@
+name: bgp
+prefix: ""
+
+mgmt:
+  network: statics
+  ipv4_subnet: 172.100.100.0/24
+
+topology:
+  kinds:
+    ceos:
+      image: ceos:4.27.0F
+  nodes:
+    R1:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.11
+      startup-config: start/R1.conf
+    R2:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.12
+      startup-config: start/R2.conf
+    R3:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.13
+      startup-config: start/R3.conf
+    R4:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.14
+      startup-config: start/R4.conf
+    R5:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.15
+      startup-config: start/R5.conf
+    R6:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.16
+      startup-config: start/R6.conf
+    R7:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.17
+      startup-config: start/R7.conf
+    R8:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.18
+      startup-config: start/R8.conf
+  links:
+    - endpoints: ["R1:eth1", "R2:eth1"]
+    - endpoints: ["R1:eth2", "R7:eth1"]
+    - endpoints: ["R2:eth2", "R3:eth1"]
+    - endpoints: ["R3:eth2", "R4:eth1"]
+    - endpoints: ["R4:eth2", "R5:eth1"]
+    - endpoints: ["R5:eth2", "R6:eth1"]
+    - endpoints: ["R6:eth2", "R8:eth1"]
