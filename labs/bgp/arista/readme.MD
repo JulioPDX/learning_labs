@@ -2,7 +2,7 @@
 
 ## Background
 
-Hello and thank you for giving this lab a try. I was recently working my way through CCIE Routing and Switching v5.0 by Narbik Kocharians(great book) and the BGP chapters sparked my interest in creating this challenge lab. Please note, this lab should be viewed as a skills challenge to test ones knowledge of BGP, it is not an accurate representation of proper network design. I was curious how something could be solved when restrictions are added or links are limited in a BGP scenario. 
+Hello and thank you for giving this lab a try. I was recently working my way through CCIE Routing and Switching v5.0 by Narbik Kocharians(great read so far) and the BGP chapters sparked my interest in creating this challenge lab. Please note, this lab should be viewed as a skills challenge to test ones knowledge of BGP, it is not an accurate representation of proper network design. I was curious how something could be solved when restrictions are added or links are limited in a BGP scenario. 
 
 ## The Topology
 
@@ -12,7 +12,7 @@ The lab consists of 8 Arista nodes all running version 4.27.0F. Alternate versio
 
 ## Objective
 
-R1 is peered with R7 in AS 7. R7 should advertise its loopback0(`7.7.7.7/32`) interface into BGP. R6 is peered with R8 in AS 8. R8 should advertise its loopback0(`8.8.8.8/32`) interface into BGP. BGP router IDs should be manually set to `x.x.x.x`, where x is the node number. For example, R7 router ID would be `7.7.7.7`.All interface addresses have been configured for you. The lab is complete when R7 and R8 can reach the remote networks from their loopback0 interfaces.
+R1 is peered with R7 in AS 7. R7 should advertise its loopback0(`7.7.7.7/32`) interface into BGP. R6 is peered with R8 in AS 8. R8 should advertise its loopback0(`8.8.8.8/32`) interface into BGP. BGP router IDs should be manually set to `x.x.x.x`, where x is the node number. For example, R7 router ID would be `7.7.7.7`. All interface addresses have been configured for you. The lab is complete when R7 and R8 can reach the remote networks from their loopback0 interfaces.
 
 ## Deploying Topology
 
@@ -34,6 +34,7 @@ sudo containerlab deploy -t bgp.clab.yaml
 - No static routes
 - No IGPs(OSPF, IS-IS, RIP)
 - No additional links can be added
+- R1 through R6 must be in AS 123456
 
 ## Solutions
 
@@ -43,7 +44,7 @@ Steps to deploy a solution topology:
 
 ```shell
 # Destroy initial topology
-sudo containerlab destroy -t bgp.clab.yaml
+sudo containerlab destroy -t bgp.clab.yaml --cleanup
 # Deploy new topology
 sudo containerlab deploy -t solution1.clab.yaml
 # or
@@ -55,7 +56,7 @@ sudo containerlab deploy -t solution2.clab.yaml
 <details close>
 <summary>Solution</summary>
 
-I'll walk through the solution in one direction, the `7.7.7.7` network reaching R8. The steps are very similar in reverse direction to get the `8.8.8.8` network to R7. For started we will configure the BGP peering between R1 and R7
+I'll walk through the solution in one direction, the `7.7.7.7` network reaching R8. The steps are very similar in reverse direction to get the `8.8.8.8` network to R7. For starters we will configure the BGP peering between R1 and R7
 
 ```text
 --- R7 ---
@@ -256,9 +257,9 @@ router bgp 123456
    neighbor 10.3.4.4 route-reflector-client
 --- R4 ---
 # Check out the addition of the Cluster List!
-R4#show ip bgp | b Network
+R4#show ip bgp | b Network 
           Network                Next Hop              Metric  AIGP       LocPref Weight  Path
-          7.7.7.7/32             10.2.3.2              0       -          100     0       7 i Or-ID: 1.1.1.1 C-LST: 3.3.3.3 2.2.2.2 
+ * >      7.7.7.7/32             10.3.4.3              0       -          100     0       7 i Or-ID: 1.1.1.1 C-LST: 3.3.3.3 2.2.2.2
 R4#
 router bgp 123456
    neighbor 10.3.4.3 next-hop-self
@@ -296,9 +297,10 @@ R8#show ip bgp | b Network
 R8#
 ```
 
-Please note, once the route reaches R8 an eBGP peer, the Cluster List and Originator ID are now gone. In this case we have solved the solution in one direction, try and solve it in the other in the other direction. If not, feel free to deploy Solution 1 and review the networks and configurations.To deploy that solution, run the command below.
+Please note, once the route reaches R8 an eBGP peer, the Cluster List and Originator ID are now gone. In this case we have solved the solution in one direction, try and solve it in the reverse direction. If not, feel free to deploy Solution 1 and review the networks and configurations. To deploy that solution, run the command below.
 
 ```shell
+sudo containerlab destroy -t bgp.clab.yaml --cleanup
 sudo containerlab deploy -t solution1.clab.yaml
 ```
 
@@ -310,21 +312,145 @@ High level diagram of the RR craziness that is going on in this topology.
 
 ### Solution 2
 
-<details open>
+<details close>
 <summary>Solution</summary>
 
-Solution 3
+Solution 2 introduces confederations to the mix. A lot of what was used in solution 1 still applies but less RR will be required. When using confederations, we are essentially sub dividing our main autonomous system. When using a confederation, a full iBGP mesh is still required. Since we cannot have an IGP or static routes, the RR option we used in solution 1 will once again be applied but at specific nodes.
+
+![BGP Confed](images/bgp_challenge_confed.png)
+
+R1 through R3 will be iBGP neighbors in AS 123. R4 through R6 will be iBGP neighbors in AS 456. Their overall BGP AS will still be 123456 when viewed by eBGP neighbors. I'll work through the configuration on R1-R3, the opposite side of the network is essentially the same.
+
+```text
+--- R7 ---
+router bgp 7
+   router-id 7.7.7.7
+   neighbor 10.1.7.1 remote-as 123456
+   network 7.7.7.7/32
+--- R1 ---
+router bgp 123
+   router-id 1.1.1.1
+   bgp confederation identifier 123456
+   neighbor 10.1.2.2 remote-as 123
+   neighbor 10.1.2.2 next-hop-self
+   neighbor 10.1.7.7 remote-as 7
+--- R2 ---
+# Using peer groups to reduce commands and BGP update messages
+router bgp 123
+   router-id 2.2.2.2
+   bgp confederation identifier 123456
+   neighbor iBGP peer group
+   neighbor iBGP remote-as 123
+   neighbor iBGP next-hop-self
+   neighbor iBGP route-reflector-client
+   neighbor 10.1.2.1 peer group iBGP
+   neighbor 10.2.3.3 peer group iBGP
+--- R3 ---
+router bgp 123
+   router-id 3.3.3.3
+   bgp confederation identifier 123456
+   bgp confederation peers 456
+   neighbor 10.2.3.2 remote-as 123
+   neighbor 10.2.3.2 next-hop-self
+   neighbor 10.3.4.4 remote-as 456
+```
+
+The opposite end of the network is almost a mirror image of what we just configured. Lets check a few nodes and check if the `7.7.7.7/32` network is valid.
+
+```text
+--- R2 ---
+R2#show ip bgp | b Network
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      7.7.7.7/32             10.1.2.1              0       -          100     0       7 i
+# Looks good so far!
+--- R3 ---
+R3#show ip bgp | b Network
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      7.7.7.7/32             10.2.3.2              0       -          100     0       7 i Or-ID: 1.1.1.1 C-LST: 2.2.2.2 
+          8.8.8.8/32             10.4.5.5              0       -          100     0       (456) 8 i
+R3#
+```
+
+It looks like R3 has the `7.7.7.7` network and we can see the Originator ID(R1) and the Cluster List(R2/RR) has been added. More interesting, the `8.8.8.8` network is not valid. The current next hop is set to the network between R4 and R5. R3 in sub-AS 123 and R4 in sub-AS 456 will act as eBGP neighbors, with the exception of MED, local preference and the next-hop. Those values will not be updated when using confederations. We can easily get through this by adding the `next-hop-self` option to both R3 and R4.
+
+```text
+--- R3 ---
+router bgp 123
+   neighbor 10.3.4.4 next-hop-self
+--- R4 ---
+router bgp 456
+   neighbor 10.3.4.3 next-hop-self
+```
+
+```text
+R3#show ip bgp 8.8.8.8
+BGP routing table information for VRF default
+Router identifier 3.3.3.3, local AS number 123
+BGP routing table entry for 8.8.8.8/32
+ Paths: 1 available
+  (456) 8
+    10.3.4.4 from 10.3.4.4 (4.4.4.4)
+      Origin IGP, metric 0, localpref 100, IGP metric 0, weight 0, tag 0
+      Received 00:00:51 ago, valid, confed-external, best
+      Rx SAFI: Unicast
+------------------------------------------------------------------------
+R4#show ip bgp 7.7.7.7
+BGP routing table information for VRF default
+Router identifier 4.4.4.4, local AS number 456
+BGP routing table entry for 7.7.7.7/32
+ Paths: 1 available
+  (123) 7
+    10.3.4.3 from 10.3.4.3 (3.3.3.3)
+      Origin IGP, metric 0, localpref 100, IGP metric 0, weight 0, tag 0
+      Received 00:08:42 ago, valid, confed-external, best
+      Rx SAFI: Unicast
+```
+
+Here we can see where the paths have crossed the center nodes. You may notice in the AS path is `(123)` and `(456)` in the respective routes. This is known as the **AS_CONFED_SEQUENCE**. This is used as a loop prevention mechanism in confederations. If the same sequence is sent to a node, this information will be discarded.
+
+```text
+R7#show ip bgp | b Network
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      7.7.7.7/32             -                     -       -          -       0       i
+ * >      8.8.8.8/32             10.1.7.1              0       -          100     0       123456 8 i
+R7#
+```
+
+From the perspective of R7, the AS path to the `8.8.8.8` network is 123456 and finally 8.
+
+```text
+R7#ping 8.8.8.8 source 7.7.7.7
+PING 8.8.8.8 (8.8.8.8) from 7.7.7.7 : 72(100) bytes of data.
+80 bytes from 8.8.8.8: icmp_seq=1 ttl=58 time=0.573 ms
+80 bytes from 8.8.8.8: icmp_seq=2 ttl=58 time=0.222 ms
+80 bytes from 8.8.8.8: icmp_seq=3 ttl=58 time=0.250 ms
+80 bytes from 8.8.8.8: icmp_seq=4 ttl=58 time=0.212 ms
+80 bytes from 8.8.8.8: icmp_seq=5 ttl=58 time=0.203 ms
+
+--- 8.8.8.8 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 2ms
+rtt min/avg/max/mdev = 0.203/0.292/0.573/0.141 ms, ipg/ewma 0.652/0.427 ms
+R7#traceroute 8.8.8.8 source 7.7.7.7
+traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
+ 1  10.1.7.1 (10.1.7.1)  0.165 ms  0.090 ms  0.049 ms
+ 2  10.1.2.2 (10.1.2.2)  0.110 ms  0.077 ms  0.075 ms
+ 3  10.2.3.3 (10.2.3.3)  0.144 ms  0.178 ms  0.159 ms
+ 4  10.3.4.4 (10.3.4.4)  0.188 ms  0.137 ms  0.133 ms
+ 5  10.4.5.5 (10.4.5.5)  0.213 ms  0.171 ms  0.163 ms
+ 6  10.5.6.6 (10.5.6.6)  0.283 ms  0.236 ms  0.197 ms
+ 7  8.8.8.8 (8.8.8.8)  0.274 ms  0.286 ms  0.357 ms
+R7#
+```
+
+If you would like to deploy solution 2, please run the command below.
+
+```shell
+# Make sure any previously created labs are destroyed
+sudo containerab deploy -t solution2.clab.yaml
+```
 
 </details>
 
-### confederations
+## Outro
 
-- AS_CONFED_SEQ
-- AS_CONFED_SET
-
-next hop is not changes between confederations eBGP neighbors, show example
-
-
-show solution1 in one way, the configuration in the reverse directions is essentially the same
-
-Same with solution2
+Thank you all for taking the challenge. I hope you had some fun and possibly learned something new. Feel free to share your solutions with me, I would love to see them! Ping me on [Twitter](https://twitter.com/Julio_PDX)!
