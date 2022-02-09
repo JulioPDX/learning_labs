@@ -451,6 +451,68 @@ sudo containerab deploy -t solution2.clab.yaml
 
 </details>
 
+### Solution 3
+
+<details close>
+<summary>Solution</summary>
+
+This solution is cheating a bit but it works :grinning:. It was presented to me by [Jeroen van Bemmel](https://www.linkedin.com/in/jeroenvbemmel/). This solution relies on `local-as` to be set on each individual iBGP peer to override the `router bgp 123456` configuration. While the router has been configured to be in AS 123456, in reality it is not. I will show a few examples on R1-R3. The others are fairly similar. Please note the AS path listed from R7.
+
+
+```text
+--- R1 ---
+router bgp 123456
+   router-id 1.1.1.1
+   neighbor 10.1.2.2 remote-as 2
+   neighbor 10.1.2.2 local-as 1 no-prepend replace-as
+   neighbor 10.1.7.7 remote-as 7
+```
+
+```text
+--- R2 ---
+router bgp 123456
+   router-id 2.2.2.2
+   neighbor 10.1.2.1 remote-as 1
+   neighbor 10.1.2.1 local-as 2 no-prepend replace-as
+   neighbor 10.2.3.3 remote-as 3
+   neighbor 10.2.3.3 local-as 2 no-prepend replace-as
+```
+
+```text
+router bgp 123456
+   router-id 3.3.3.3
+   neighbor 10.2.3.2 remote-as 2
+   neighbor 10.2.3.2 local-as 3 no-prepend replace-as
+   neighbor 10.3.4.4 remote-as 4
+   neighbor 10.3.4.4 local-as 3 no-prepend replace-as
+R3#show ip bgp | b Network
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      7.7.7.7/32             10.2.3.2              0       -          100     0       2 1 7 i
+```
+
+Please note the AS path difference when using this solution.
+
+```text
+R7#show ip bgp | b Network
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+ * >      7.7.7.7/32             -                     -       -          -       0       i
+ * >      8.8.8.8/32             10.1.7.1              0       -          100     0       123456 2 3 4 5 6 8 i
+R7#ping 8.8.8.8 source 7.7.7.7
+PING 8.8.8.8 (8.8.8.8) from 7.7.7.7 : 72(100) bytes of data.
+80 bytes from 8.8.8.8: icmp_seq=1 ttl=58 time=0.580 ms
+80 bytes from 8.8.8.8: icmp_seq=2 ttl=58 time=0.228 ms
+80 bytes from 8.8.8.8: icmp_seq=3 ttl=58 time=0.217 ms
+80 bytes from 8.8.8.8: icmp_seq=4 ttl=58 time=0.208 ms
+80 bytes from 8.8.8.8: icmp_seq=5 ttl=58 time=0.209 ms
+
+--- 8.8.8.8 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 2ms
+rtt min/avg/max/mdev = 0.208/0.288/0.580/0.146 ms, ipg/ewma 0.635/0.428 ms
+R7#
+```
+
+</details>
+
 ## Outro
 
 Thank you all for taking the challenge. I hope you had some fun and possibly learned something new. Feel free to share your solutions with me, I would love to see them! Ping me on [Twitter](https://twitter.com/Julio_PDX)!
