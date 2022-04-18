@@ -5,7 +5,7 @@ topology:
 
   kinds:
     ceos:
-      image: ceos:4.27.2F
+      image: ceos:4.28.0F
     srl:
       image: ghcr.io/nokia/srlinux
 
@@ -32,6 +32,7 @@ topology:
       mgmt_ipv4: 172.20.20.15
     cloud:
       kind: ceos
+      startup-config: conf/cloud.conf
       mgmt_ipv4: 172.20.20.16
 
   links:
