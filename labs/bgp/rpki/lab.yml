@@ -1,0 +1,40 @@
+name: rpki
+prefix: ""
+
+mgmt:
+  network: statics
+  ipv4_subnet: 172.100.100.0/24
+
+topology:
+  kinds:
+    ceos:
+      image: ceos:4.29.0.2F
+    linux:
+      image: nlnetlabs/routinator
+  nodes:
+    R1:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.11
+      startup-config: startup/R1.conf
+    R2:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.12
+      startup-config: startup/R2.conf
+    LAN:
+      kind: ceos
+      mgmt_ipv4: 172.100.100.13
+      startup-config: startup/LAN.conf
+    RPKI:
+      kind: linux
+      mgmt_ipv4: 172.100.100.14
+      ports:
+      - 80:8323
+      exec:
+      - ip a add 192.168.1.240/24 dev eth1
+  links:
+    # Nodes to LAN
+    - endpoints: ["R1:eth1", "LAN:eth1"]
+    - endpoints: ["R2:eth1", "LAN:eth2"]
+    - endpoints: ["RPKI:eth1", "LAN:eth3"]
+    # Node to Node
+    - endpoints: ["R1:eth2", "R2:eth2"]
