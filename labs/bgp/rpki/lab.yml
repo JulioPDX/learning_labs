@@ -20,21 +20,10 @@ topology:
       kind: ceos
       mgmt_ipv4: 172.100.100.12
       startup-config: startup/R2.conf
-    LAN:
-      kind: ceos
-      mgmt_ipv4: 172.100.100.13
-      startup-config: startup/LAN.conf
     RPKI:
       kind: linux
-      mgmt_ipv4: 172.100.100.14
+      mgmt_ipv4: 172.100.100.13
       ports:
       - 80:8323
-      exec:
-      - ip a add 192.168.1.240/24 dev eth1
   links:
-    # Nodes to LAN
-    - endpoints: ["R1:eth1", "LAN:eth1"]
-    - endpoints: ["R2:eth1", "LAN:eth2"]
-    - endpoints: ["RPKI:eth1", "LAN:eth3"]
-    # Node to Node
-    - endpoints: ["R1:eth2", "R2:eth2"]
+    - endpoints: ["R1:eth1", "R2:eth1"]
