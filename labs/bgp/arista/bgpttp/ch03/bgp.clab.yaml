@@ -1,0 +1,63 @@
+name: bgp
+prefix: ""
+
+mgmt:
+  network: statics
+  ipv4_subnet: 172.179.179.0/24
+
+topology:
+  kinds:
+    ceos:
+      image: ceos:4.31.1F
+  nodes:
+    ce1:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.11
+    ce2:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.12
+    pe1:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.13
+    pe2:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.14
+    gtw-1:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.15
+    gtw-2:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.16
+    ixp:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.17
+    up-1:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.18
+    up-2:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.19
+    internet:
+      kind: ceos
+      mgmt-ipv4: 172.179.179.20
+  links:
+  # CE to PE
+    - endpoints: ["ce1:eth1", "pe1:eth1"]
+    - endpoints: ["ce1:eth2", "pe2:eth1"]
+    - endpoints: ["ce2:eth1", "pe1:eth2"]
+    - endpoints: ["ce2:eth2", "pe2:eth2"]
+  # ISP Tier-2
+    - endpoints: ["pe1:eth3", "pe2:eth3"]
+    - endpoints: ["pe1:eth4", "gtw-1:eth1"]
+    - endpoints: ["pe1:eth5", "gtw-2:eth1"]
+    - endpoints: ["pe2:eth4", "gtw-1:eth2"]
+    - endpoints: ["pe2:eth5", "gtw-2:eth2"]
+    - endpoints: ["gtw-1:eth3", "gtw-2:eth3"]
+  # IXP
+    - endpoints: ["gtw-1:eth4", "ixp:eth1"]
+    - endpoints: ["gtw-2:eth4", "ixp:eth2"]
+    - endpoints: ["up-1:eth1", "ixp:eth3"]
+    - endpoints: ["up-2:eth1", "ixp:eth4"]
+  # ISP
+    - endpoints: ["up-1:eth2", "internet:eth1"]
+    - endpoints: ["up-2:eth2", "internet:eth2"]
