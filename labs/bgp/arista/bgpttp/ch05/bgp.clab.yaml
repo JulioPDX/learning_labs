@@ -13,33 +13,43 @@ topology:
     ce1:
       kind: ceos
       mgmt-ipv4: 172.179.179.11
+      startup-config: startup/ce1.cfg
     ce2:
       kind: ceos
       mgmt-ipv4: 172.179.179.12
+      startup-config: startup/ce2.cfg
     pe1:
       kind: ceos
       mgmt-ipv4: 172.179.179.13
+      startup-config: startup/pe1.cfg
     pe2:
       kind: ceos
       mgmt-ipv4: 172.179.179.14
+      startup-config: startup/pe2.cfg
     gtw-1:
       kind: ceos
       mgmt-ipv4: 172.179.179.15
+      startup-config: startup/gtw-1.cfg
     gtw-2:
       kind: ceos
       mgmt-ipv4: 172.179.179.16
+      startup-config: startup/gtw-2.cfg
     ixp:
       kind: ceos
       mgmt-ipv4: 172.179.179.17
+      startup-config: startup/ixp.cfg
     up-1:
       kind: ceos
       mgmt-ipv4: 172.179.179.18
+      startup-config: startup/up-1.cfg
     up-2:
       kind: ceos
       mgmt-ipv4: 172.179.179.19
+      startup-config: startup/up-2.cfg
     internet:
       kind: ceos
       mgmt-ipv4: 172.179.179.20
+      startup-config: startup/internet.cfg
   links:
   # CE to PE
     - endpoints: ["ce1:eth1", "pe1:eth1"]
