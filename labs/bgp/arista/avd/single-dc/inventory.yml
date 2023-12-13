@@ -1,0 +1,53 @@
+---
+all:
+  children:
+    ATD_LAB:
+      children:
+        ATD_FABRIC:
+          children:
+            ATD_SPINES:
+              vars:
+                type: spine
+              hosts:
+                s1-spine1:
+                  ansible_host: 172.100.100.11
+                s1-spine2:
+                  ansible_host: 172.100.100.12
+            ATD_LEAFS:
+              vars:
+                type: l3leaf
+              children:
+                pod1:
+                  hosts:
+                    s1-leaf1:
+                      ansible_host: 172.100.100.13
+                    s1-leaf2:
+                      ansible_host: 172.100.100.14
+                pod2:
+                  hosts:
+                    s1-leaf3:
+                      ansible_host: 172.100.100.15
+                    s1-leaf4:
+                      ansible_host: 172.100.100.16
+        ATD_TENANTS_NETWORKS:
+          children:
+            ATD_LEAFS:
+        ATD_SERVERS:
+          children:
+            ATD_LEAFS:
+
+  vars:
+    ansible_user: admin
+    ansible_password: admin
+    ansible_network_os: arista.eos.eos
+    # Configure privilege escalation
+    ansible_become: true
+    ansible_become_method: enable
+    # HTTPAPI configuration
+    ansible_connection: httpapi
+    ansible_httpapi_port: 443
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_python_interpreter: $(which python3)
+    avd_data_conversion_mode: error
+    avd_data_validation_mode: error

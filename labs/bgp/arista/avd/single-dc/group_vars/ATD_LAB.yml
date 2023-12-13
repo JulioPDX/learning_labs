@@ -1,0 +1,18 @@
+---
+# OOB Management network default gateway
+mgmt_gateway: 172.100.100.1
+# If ATD is running cEOS, management interface is Management0
+# If ATD is running vEOS, management interface is Management1
+mgmt_interface: Management0
+mgmt_interface_vrf: default
+
+name_servers:
+  - 8.8.8.8
+
+dns_domain: atd.lab
+
+local_users:
+  - name: admin
+    privilege: 15
+    role: network-admin
+    sha512_password: "$6$.deaeiVysLjJDgql$uAxFhKq1Lqj5AgMB3G1h04YedMA6vXyPjzOEX1EPDXApFgvvBlE7MKiU3.RVSvUqqxrEfxQmW.8UP1ZoeKMAM/"

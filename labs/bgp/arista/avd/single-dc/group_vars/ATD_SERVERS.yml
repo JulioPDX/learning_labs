@@ -1,0 +1,40 @@
+---
+port_profiles:
+  - profile: TENANT_A
+    mode: access
+    vlans: "110"
+
+
+servers:
+  - name: s1-host1
+    rack: pod1
+    adapters:
+      - endpoint_ports: [Eth1, Eth2]
+        switch_ports: [Ethernet4, Ethernet4]
+        switches: [s1-leaf1, s1-leaf2]
+        profile: TENANT_A
+        port_channel:
+          description: PortChannel
+          mode: active
+
+  - name: s1-host2
+    rack: pod2
+    adapters:
+      - endpoint_ports: [Eth1, Eth2]
+        switch_ports: [Ethernet4, Ethernet4]
+        switches: [s1-leaf3, s1-leaf4]
+        profile: TENANT_A
+        port_channel:
+          description: PortChannel
+          mode: active
+
+# Sample network port config as access ports
+# For multiport port-channel setup, please use the connected endpoint example above
+
+# network_ports:
+#   - switches:
+#       - leaf[34] # Simple regex to match on leaf3 and leaf4
+#     switch_ports: # Ex Ethernet1-48 or Ethernet2-3/1-48
+#       - Ethernet4
+#     description: Connection to host2
+#     profile: TENANT_A

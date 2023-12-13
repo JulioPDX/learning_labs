@@ -1,0 +1,114 @@
+---
+# L3LS Fabric Values - update these values with caution,
+# SOME CHANGES COULD BE DISRUPTIVE.
+
+fabric_name: ATD_FABRIC
+
+# Enable vlan aware bundles
+evpn_vlan_aware_bundles: true
+
+# Select rfc5549 or ospf, not both
+
+# underlay_rfc5549: true
+# overlay_mlag_rfc5549: true
+# underlay_ipv6: true
+
+# underlay_routing_protocol: OSPF
+
+# Optional, enable multicast features
+# underlay_multicast: true
+# evpn_multicast: true
+
+# bgp peer groups passwords
+bgp_peer_groups:
+  ipv4_underlay_peers:
+    password: "AQQvKeimxJu+uGQ/yYvv9w=="
+  evpn_overlay_peers:
+    password: "q+VNViP5i4rVjW1cxFv2wA=="
+  mlag_ipv4_underlay_peer:
+    password: "vnEaG8gMeQf3d3cN6PktXQ=="
+
+bgp_graceful_restart:
+  enabled: true
+  restart_time: 300
+
+bgp_distance:
+  external_routes: 20
+  internal_routes: 200
+  local_routes: 200
+
+# Spine Switches
+spine:
+  defaults:
+    platform: cEOS
+    bgp_as: 65001
+    loopback_ipv4_pool: 192.0.255.0/24
+    loopback_ipv6_pool: 2001:db8:c01d:c01a::/64
+  nodes:
+    - name: s1-spine1
+      id: 1
+      mgmt_ip: 172.100.100.11/24
+    - name: s1-spine2
+      id: 2
+      mgmt_ip: 172.100.100.12/24
+
+# Leaf switch groups
+# A maximum of two nodes can form a leaf group
+# When two nodes are in a leaf group this will automatically form mlag pair
+
+l3leaf:
+  defaults:
+    platform: cEOS
+    loopback_ipv4_pool: 192.0.255.0/24
+    loopback_ipv6_pool: 2001:db8:c01d:c01a::/64
+    loopback_ipv4_offset: 2
+    vtep_loopback_ipv4_pool: 192.0.254.0/24
+    uplink_interfaces: [Ethernet2, Ethernet3]
+    uplink_switches: [s1-spine1, s1-spine2]
+    uplink_ipv4_pool: 172.30.255.0/24
+    mlag_interfaces: [Ethernet1, Ethernet6]
+    mlag_peer_ipv4_pool: 10.255.252.0/24
+    mlag_peer_l3_ipv4_pool: 10.255.251.0/24
+    virtual_router_mac_address: 00:1c:73:00:dc:01
+    spanning_tree_mode: mstp
+    spanning_tree_priority: 16384
+    filter:
+      # only_vlans_in_use: true
+  node_groups:
+    - group: pod1
+      bgp_as: 65101
+      nodes:
+        - name: s1-leaf1
+          id: 1
+          mgmt_ip: 172.100.100.13/24
+          uplink_switch_interfaces: [Ethernet2, Ethernet2]
+        - name: s1-leaf2
+          id: 2
+          mgmt_ip: 172.100.100.14/24
+          uplink_switch_interfaces: [Ethernet3, Ethernet3]
+    - group: pod2
+      bgp_as: 65102
+      nodes:
+        - name: s1-leaf3
+          id: 3
+          mgmt_ip: 172.100.100.15/24
+          uplink_switch_interfaces: [Ethernet4, Ethernet4]
+        - name: s1-leaf4
+          id: 4
+          mgmt_ip: 172.100.100.16/24
+          uplink_switch_interfaces: [Ethernet5, Ethernet5]
+
+#### Override for vEOS Lab Caveats ####
+
+# Disable update wait-for-convergence and update wait-for-install,
+# which is not supported in vEOS-LAB.
+# Refer to design guide
+
+# Update p2p mtu 9000 -> 1500
+p2p_uplinks_mtu: 1500
+
+# Adjust default bfd values
+bfd_multihop:
+  interval: 1200
+  min_rx: 1200
+  multiplier: 3
