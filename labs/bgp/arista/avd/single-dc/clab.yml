@@ -55,6 +55,6 @@ topology:
     - endpoints: ["s1-leaf1:eth4", "s1-host1:eth1"]
     - endpoints: ["s1-leaf2:eth4", "s1-host1:eth2"]
     - endpoints: ["s1-leaf3:eth4", "s1-host2:eth1"]
-    - endpoints: ["s1-host2:eth4", "s1-host2:eth2"]
+    - endpoints: ["s1-leaf4:eth4", "s1-host2:eth2"]
 
 
